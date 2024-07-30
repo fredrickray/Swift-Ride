@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { InvalidInput } from '../middlewares/errorMiddleware';
+import { InvalidInput } from '../middlewares/errorMiddleware.js';
 
 const getUserSchema = Joi.object({
   role: Joi.string().valid('passenger', 'driver'),

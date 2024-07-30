@@ -1,10 +1,10 @@
-import db from '../../../config/db';
+import db from '../../../config/db.js';
 import {
   ResourceNotFound,
   InvalidInput,
   Unauthorized,
   BadRequest,
-} from '../../../middlewares/errorMiddleware';
+} from '../../../middlewares/errorMiddleware.js';
 
 class AdminService {
   static async getUsers(req, res, next) {

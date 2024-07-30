@@ -1,4 +1,4 @@
-import AdminService from './admin-service';
+import AdminService from './admin-service.js';
 
 export class AdminController {
   constructor() {

@@ -23,6 +23,7 @@ exports.up = function (knex) {
     table.string('vehicle_front_photo');
     table.string('vehicle_back_photo');
     table.string('vehicle_inside_photo');
+    table.boolean('is_verified').defaultTo(false);
     table.timestamp('created_at').defaultTo(knex.fn.now());
     table.timestamp('updated_at').defaultTo(knex.fn.now());
   });
