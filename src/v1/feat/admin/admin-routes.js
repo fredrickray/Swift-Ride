@@ -25,6 +25,10 @@ adminRouter
   );
 
 adminRouter
+  .route('/users/:id')
+  .get(checkAdmin, adminController.getUser.bind(adminController));
+
+adminRouter
   .route('/vehicle/type')
   .post(
     checkAdmin,

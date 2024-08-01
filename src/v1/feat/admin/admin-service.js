@@ -54,13 +54,6 @@ class AdminService {
     try {
       const { role, page = 1, limit = 10 } = req.query;
 
-      // Validate the role
-      if (role && !['driver', 'passenger'].includes(role.toLowerCase())) {
-        throw new InvalidInput(
-          'Invalid role specified. It must be either "driver" or "passenger".'
-        );
-      } //TODO: Write a validator for this
-
       // Fetch role ID if role is specified
       let roleId;
       if (role) {
@@ -103,6 +96,27 @@ class AdminService {
           currentPage: page,
           pageSize: limit,
         },
+      };
+
+      res.status(200).json(resPayload);
+    } catch (error) {
+      console.log('Admin service error:', error);
+      next(error);
+    }
+  }
+
+  static async getUser(req, res, next) {
+    try {
+      const userId = req.params.id;
+      const user = await db('User').where({ id: userId }).first();
+      if (!user) {
+        throw new ResourceNotFound('User not found');
+      }
+
+      const resPayload = {
+        success: true,
+        message: 'User retrieved successfully',
+        user,
       };
 
       res.status(200).json(resPayload);

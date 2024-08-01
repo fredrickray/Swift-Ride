@@ -15,11 +15,20 @@ export class AdminController {
   }
   /**
    * @route POST api/admin/users?role
-   * @desc Get all drivers
+   * @desc Get all users
    * @access Public
    */
   async getUsers(req, res, next) {
     await this.adminService.getUsers(req, res, next);
+  }
+
+  /**
+   * @route POST api/admin/users/:id
+   * @desc Get a user
+   * @access Public
+   */
+  async getUser(req, res, next) {
+    await this.adminService.getUser(req, res, next);
   }
 
   /**
