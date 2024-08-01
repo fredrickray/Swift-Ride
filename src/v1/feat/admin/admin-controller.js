@@ -6,6 +6,14 @@ export class AdminController {
   }
 
   /**
+   * @route POST api/admin/signin
+   * @desc Signin admin
+   * @access Public
+   */
+  async signin(req, res, next) {
+    await this.adminService.signin(req, res, next);
+  }
+  /**
    * @route POST api/admin/users?role
    * @desc Get all drivers
    * @access Public

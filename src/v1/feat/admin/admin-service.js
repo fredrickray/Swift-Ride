@@ -1,12 +1,55 @@
+import bcrypt from 'bcrypt';
 import db from '../../../config/db.js';
+import { createToken } from '../../../middlewares/authMiddleware.js';
 import {
   ResourceNotFound,
   InvalidInput,
   Unauthorized,
   BadRequest,
+  Conflict,
 } from '../../../middlewares/errorMiddleware.js';
 
 class AdminService {
+  static async signin(req, res, next) {
+    try {
+      const { email, password } = req.body;
+
+      const admin = await db('User').where({ email }).first();
+      if (!admin) {
+        throw new ResourceNotFound('Invalid credentials');
+      }
+      console.log('passwordInDB', admin.password);
+      //   console.log('input password:', password);
+      const role = await db('Role').where({ id: admin.role_id }).first();
+      if (role.name !== 'admin') {
+        throw new Unauthorized('Access denied, admin only');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, admin.password);
+      console.log('inputPassword:', password);
+      if (!isPasswordValid) {
+        console.log('paswordMatch:', isPasswordValid);
+        throw new Unauthorized('Invalid credentials');
+      }
+
+      const token = createToken(admin.id);
+      const resPayload = {
+        success: true,
+        message: 'Login succesfully',
+        admin: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          phone_number: admin.phone_number,
+        },
+      };
+      res.status(200).set('Authorization', `Bearer ${token}`).json(resPayload);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
   static async getUsers(req, res, next) {
     try {
       const { role, page = 1, limit = 10 } = req.query;
@@ -64,17 +107,18 @@ class AdminService {
 
       res.status(200).json(resPayload);
     } catch (error) {
+      console.log('Admin service error:', error);
       next(error);
     }
   }
 
   static async createVehicleType(req, res, next) {
     try {
-      const { name } = req.body;
-      if (!name) {
+      const { type } = req.body;
+      if (!type) {
         throw new InvalidInput('Vehicle type name is required');
       }
-      const [typeId] = await db('Vehicle_Type').insert({ name });
+      const [typeId] = await db('Vehicle_Type').insert({ type });
 
       const resPayload = {
         success: true,
@@ -84,6 +128,7 @@ class AdminService {
 
       res.status(201).json(resPayload);
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }
@@ -94,6 +139,12 @@ class AdminService {
       if (!name) {
         throw new InvalidInput('Vehicle make name is required');
       }
+
+      const vehicleMake = await db('Vehicle_Make').where({ name }).first();
+      if (vehicleMake.name === name) {
+        throw new Conflict(`${name} already exist in the database`);
+      }
+
       const [makeId] = await db('Vehicle_Make').insert({ name });
 
       const resPayload = {

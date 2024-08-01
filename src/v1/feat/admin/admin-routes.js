@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AdminController } from './admin-controller.js';
 import {
+  adminLoginValidator,
   getUserValidator,
   verifyDriverVehicleValidator,
   createVehicleMakeValidator,
@@ -10,6 +11,10 @@ import {
 import { checkAdmin } from '../../../middlewares/authMiddleware.js';
 const adminRouter = Router();
 const adminController = new AdminController();
+
+adminRouter
+  .route('/signin')
+  .post(adminLoginValidator, adminController.signin.bind(adminController));
 
 adminRouter
   .route('/users')

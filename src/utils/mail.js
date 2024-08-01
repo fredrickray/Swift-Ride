@@ -1,13 +1,13 @@
 import nodemailer from 'nodemailer';
-
+import 'dotenv/config';
 // Create a transporter object for sending email
 const sendMail = async (email, subject, text) => {
   const transporter = nodemailer.createTransport({
-    service: process.env.SERVICE,
-    port: 587,
+    service: process.env.EMAIL_SERVICE,
+    port: process.env.EMAIL_PORT,
     auth: {
-      user: 'shopease.team@gmail.com',
-      pass: 'ftqcdnwonericykt',
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
     },
   });
 

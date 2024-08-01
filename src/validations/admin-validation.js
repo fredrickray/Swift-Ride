@@ -1,6 +1,21 @@
 import Joi from 'joi';
 import { InvalidInput } from '../middlewares/errorMiddleware.js';
 
+const adminLoginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+});
+
+const adminLoginValidator = (req, res, next) => {
+  const { error } = adminLoginSchema.validate(req.body);
+
+  if (error) {
+    const errorMessages = error.details.map((detail) => detail.message);
+    throw new InvalidInput(errorMessages);
+  }
+  next();
+};
+
 const getUserSchema = Joi.object({
   role: Joi.string().valid('passenger', 'driver'),
   page: Joi.number().integer().min(1).default(1),
@@ -18,7 +33,7 @@ const getUserValidator = (req, res, next) => {
 };
 
 const createVehicleTypeSchema = Joi.object({
-  name: Joi.string().required().min(3).max(100),
+  type: Joi.string().required().valid('premium', 'comfort'),
 });
 
 const createVehicleTypeValidator = (req, res, next) => {
@@ -81,4 +96,5 @@ export {
   createVehicleMakeValidator,
   createVehicleModelValidator,
   verifyDriverVehicleValidator,
+  adminLoginValidator,
 };

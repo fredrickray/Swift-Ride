@@ -11,6 +11,7 @@ import sendMail from '../../../utils/mail.js';
 import {
   createToken,
   verifyToken,
+  expiryTime,
 } from '../../../middlewares/authMiddleware.js';
 import passport from '../../../utils/passport.js';
 
@@ -40,6 +41,8 @@ class AuthService {
         password: hashedPassword,
         phone_number,
         role_id: roleRecord.id,
+        otp: verificationCode,
+        otpExpiry: expiryTime,
         created_at: db.fn.now(),
         updated_at: db.fn.now(),
       });
@@ -71,12 +74,14 @@ class AuthService {
         throw new ResourceNotFound('Invalid credentials');
       }
 
-      const isPasswordValid = bcrypt.compare(password, user.passowrd);
+      console.log('passwordInDB:', user.password);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log('inputPassword:', password);
       if (!isPasswordValid) {
         throw new ResourceNotFound('Invalid credentials');
       }
 
-      if (user.isVerified === '0' || user.isVerified === false) {
+      if (user.isVerified === 0 || user.isVerified === false) {
         const verificationCode = generateOtp();
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -106,11 +111,11 @@ class AuthService {
           email: user.email,
           phone_number: user.phone_number,
         },
-        token,
       };
 
-      res.status(200).json(resPayload);
+      res.status(200).set('Authorization', `Bearer ${token}`).json(resPayload);
     } catch (error) {
+      console.log(error);
       next(error);
     }
   }
