@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 // import session from 'express-session';
 // import rateLimit from 'express-rate-limit';
 import { errorHandler, routeNotFound } from './middlewares/errorMiddleware.js';
@@ -9,8 +11,12 @@ import indexRouter from './v1/routes/index.js';
 class App {
   constructor() {
     this.app = express();
+    this.server = createServer(this.app); // Create HTTP server
+    this.io = new SocketIOServer(this.server); // Attach socket.io to the server
+
     this.initializeMiddlewares();
     this.routes();
+    this.initializeSocket();
     this.handleErrors();
   }
 
@@ -56,6 +62,23 @@ class App {
       });
     });
     this.app.use('/api', indexRouter);
+  }
+
+  initializeSocket() {
+    this.io.on('connection', (socket) => {
+      console.log(`New client connected: ${socket.id}`);
+
+      // Example event
+      socket.on('message', (data) => {
+        console.log('Received message:', data);
+        // Broadcasting the message to all clients
+        this.io.emit('message', data);
+      });
+
+      socket.on('disconnect', () => {
+        console.log(`Client disconnected: ${socket.id}`);
+      });
+    });
   }
 
   handleErrors() {
