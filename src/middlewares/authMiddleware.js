@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import knex from '../config/knexfile.cjs';
+import db from '../config/db.js';
 import {
   Unauthorized,
   InvalidInput,
@@ -9,7 +9,7 @@ import {
 const maxAge = 10 * 60 * 100;
 const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
 const createToken = (id) => {
-  return jwt.sign({ id }, process.env.SECRET, {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: maxAge,
   });
 };
@@ -39,7 +39,7 @@ const requireAuth = async (req, res, next) => {
 
     const token = authorization.split(' ')[1];
     const { id } = verifyToken(token);
-    const user = await knex('Merchants').where({ id });
+    const user = await db('User').where({ id });
 
     if (!user) {
       throw new ResourceNotFound('User not found');
@@ -47,8 +47,37 @@ const requireAuth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
 
-export { createToken, verifyToken, requireAuth, expiryTime };
+const checkAdmin = async (req, res, next) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization) {
+      throw new Unauthorized('Authorization token required');
+    }
+
+    const token = authorization.split(' ')[1];
+    const { id } = await verifyToken(token);
+    const user = await db('User').where({ id }).first();
+
+    if (!user) {
+      throw new Unauthorized('User not found');
+    }
+
+    const role = await db('Role').where({ id: user.role_id }).first();
+    if (role.name !== 'admin') {
+      throw new Unauthorized('Access denied, admin only');
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    console.log('Check admin error:', error);
+    next(error);
+  }
+};
+
+export { createToken, verifyToken, requireAuth, expiryTime, checkAdmin };

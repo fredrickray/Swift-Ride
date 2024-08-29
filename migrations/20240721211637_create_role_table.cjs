@@ -5,7 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable('Role', (table) => {
     table.increments('id').primary();
-    table.enum('name', ['passenger', 'driver']);
+    table.enum('name', ['passenger', 'driver', 'admin']);
   });
 };
 
