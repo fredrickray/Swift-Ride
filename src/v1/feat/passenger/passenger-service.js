@@ -316,22 +316,23 @@ class PassengerService {
       const availableDrivers = await db('Driver')
         .join('Vehicle', 'Driver.id', '=', 'Vehicle.driver_id')
         .join('Vehicle_Type', 'Vehicle.type_id', '=', 'Vehicle_Type.id')
+        .join('User', 'User.id', '=', 'Driver.user_id')
         .join(
           'Driver_Availability',
           'Driver.id',
           '=',
           'Driver_Availability.driver_id'
         )
-        .where({ 'Vehicle_Type.name': q, 'Driver_Availability.available': 1 })
+        .where({ 'Vehicle_Type.type': q, 'Driver_Availability.available': 1 })
         .select(
           'Driver.id',
-          'Driver.name',
+          'User.name',
           'Vehicle.make_id',
           'Vehicle.type_id',
           'Vehicle.color'
         );
 
-      if (!availableDrivers) {
+      if (availableDrivers.length === 0) {
         throw new ResourceNotFound(`No available drivers for ${q}`);
       }
 
