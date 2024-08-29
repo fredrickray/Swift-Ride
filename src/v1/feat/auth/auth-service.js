@@ -74,9 +74,9 @@ class AuthService {
         throw new ResourceNotFound('Invalid credentials');
       }
 
-      console.log('passwordInDB:', user.password);
+      // console.log('passwordInDB:', user.password);
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      console.log('inputPassword:', password);
+      // console.log('inputPassword:', password);
       if (!isPasswordValid) {
         throw new ResourceNotFound('Invalid credentials');
       }

@@ -34,6 +34,7 @@ const getUserValidator = (req, res, next) => {
 
 const createVehicleTypeSchema = Joi.object({
   type: Joi.string().required().valid('premium', 'comfort'),
+  value: Joi.number().required(),
 });
 
 const createVehicleTypeValidator = (req, res, next) => {

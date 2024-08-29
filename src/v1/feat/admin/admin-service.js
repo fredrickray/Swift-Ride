@@ -18,8 +18,7 @@ class AdminService {
       if (!admin) {
         throw new ResourceNotFound('Invalid credentials');
       }
-      console.log('passwordInDB', admin.password);
-      //   console.log('input password:', password);
+
       const role = await db('Role').where({ id: admin.role_id }).first();
       if (role.name !== 'admin') {
         throw new Unauthorized('Access denied, admin only');
@@ -28,7 +27,6 @@ class AdminService {
       const isPasswordValid = await bcrypt.compare(password, admin.password);
       console.log('inputPassword:', password);
       if (!isPasswordValid) {
-        console.log('paswordMatch:', isPasswordValid);
         throw new Unauthorized('Invalid credentials');
       }
 
@@ -128,11 +126,8 @@ class AdminService {
 
   static async createVehicleType(req, res, next) {
     try {
-      const { type } = req.body;
-      if (!type) {
-        throw new InvalidInput('Vehicle type name is required');
-      }
-      const [typeId] = await db('Vehicle_Type').insert({ type });
+      const { type, value } = req.body;
+      const [typeId] = await db('Vehicle_Type').insert({ type, value });
 
       const resPayload = {
         success: true,

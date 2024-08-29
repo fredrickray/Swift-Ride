@@ -1,4 +1,4 @@
-import DriverService from './driver-service';
+import DriverService from './driver-service.js';
 
 export class DriverController {
   constructor() {

@@ -11,8 +11,8 @@ import indexRouter from './v1/routes/index.js';
 class App {
   constructor() {
     this.app = express();
-    this.server = createServer(this.app); // Create HTTP server
-    this.io = new SocketIOServer(this.server); // Attach socket.io to the server
+    this.server = createServer(this.app); // Creating HTTP server
+    this.io = new SocketIOServer(this.server); // Attaching socket.io to the server
 
     this.initializeMiddlewares();
     this.routes();
@@ -79,6 +79,8 @@ class App {
         console.log(`Client disconnected: ${socket.id}`);
       });
     });
+
+    this.app.io = this.io;
   }
 
   handleErrors() {
