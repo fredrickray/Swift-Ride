@@ -26,9 +26,7 @@ class AuthService {
 
       let roleRecord = await db('Role').where({ name: role }).first();
       if (!roleRecord) {
-        const [roleId] = await db('Role')
-          .insert({ name: role })
-          .returning('id');
+        const [roleId] = await db('Role').insert({ name: role });
         roleRecord = { id: roleId };
       }
 
@@ -46,6 +44,16 @@ class AuthService {
         created_at: db.fn.now(),
         updated_at: db.fn.now(),
       });
+
+      if (role.toLowerCase() === 'passenger') {
+        await db('Passenger').insert({
+          user_id: userId,
+        });
+      } else if (role.toLowerCase() === 'driver') {
+        await db('Driver').insert({
+          user_id: userId,
+        });
+      }
 
       await sendMail(
         email,

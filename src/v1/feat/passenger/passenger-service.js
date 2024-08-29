@@ -310,9 +310,9 @@ class PassengerService {
   static async availableDrivers(req, res, next) {
     try {
       const { q } = req.query;
-      if (!q) {
-        throw new InvalidInput('Vehicle type is required');
-      }
+      // if (!q) {
+      //   throw new InvalidInput('Vehicle type is required');
+      // }
       const availableDrivers = await db('Driver')
         .join('Vehicle', 'Driver.id', '=', 'Vehicle.driver_id')
         .join('Vehicle_Type', 'Vehicle.type_id', '=', 'Vehicle_Type.id')
