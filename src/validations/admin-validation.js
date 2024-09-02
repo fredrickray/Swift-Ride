@@ -78,7 +78,7 @@ const createVehicleModelValidator = (req, res, next) => {
 };
 
 const verifyDriverVehicleSchema = Joi.object({
-  vehicle_id: Joi.number().integer().required(),
+  vehicleId: Joi.number().integer().required(),
 });
 
 const verifyDriverVehicleValidator = (req, res, next) => {

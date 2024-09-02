@@ -50,11 +50,20 @@ export class AdminController {
   }
 
   /**
-   * @route POST api/vehicle/:id/verify
+   * @route POST api/vehicle/:vehicleId/verify
    * @desc Verify a vehicle
    * @access Public
    */
   async verifyDriverVehicle(req, res, next) {
     await this.adminService.verifyDriverVehicle(req, res, next);
+  }
+
+  /**
+   * @route POST api/vehicle/assign-type
+   * @desc Verify a vehicle
+   * @access Public
+   */
+  async assignVehicleTypeToDriverVehicle(req, res, next) {
+    await this.adminService.assignVehicleTypeToDriverVehicle(req, res, next);
   }
 }

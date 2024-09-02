@@ -45,11 +45,13 @@ adminRouter
   );
 
 adminRouter
-  .route('/vehicle/:id/verify')
-  .post(
-    checkAdmin,
-    verifyDriverVehicleValidator,
-    adminController.verifyDriverVehicle.bind(adminController)
-  );
+  .route('/vehicle/:vehicleId/verify')
+  .put(checkAdmin, adminController.verifyDriverVehicle.bind(adminController));
 
+adminRouter
+  .route('/vehicle/assign-type')
+  .patch(
+    checkAdmin,
+    adminController.assignVehicleTypeToDriverVehicle.bind(adminController)
+  );
 export default adminRouter;
