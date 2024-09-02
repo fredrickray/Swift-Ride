@@ -8,6 +8,7 @@ import {
   BadRequest,
   Conflict,
 } from '../../../middlewares/errorMiddleware.js';
+import sendMail from '../../../utils/mail.js';
 
 class AdminService {
   static async signin(req, res, next) {
@@ -25,7 +26,7 @@ class AdminService {
       }
 
       const isPasswordValid = await bcrypt.compare(password, admin.password);
-      console.log('inputPassword:', password);
+
       if (!isPasswordValid) {
         throw new Unauthorized('Invalid credentials');
       }
@@ -43,7 +44,6 @@ class AdminService {
       };
       res.status(200).set('Authorization', `Bearer ${token}`).json(resPayload);
     } catch (error) {
-      console.log(error);
       next(error);
     }
   }
@@ -98,7 +98,6 @@ class AdminService {
 
       res.status(200).json(resPayload);
     } catch (error) {
-      console.log('Admin service error:', error);
       next(error);
     }
   }
@@ -119,7 +118,6 @@ class AdminService {
 
       res.status(200).json(resPayload);
     } catch (error) {
-      console.log('Admin service error:', error);
       next(error);
     }
   }
@@ -137,7 +135,6 @@ class AdminService {
 
       res.status(201).json(resPayload);
     } catch (error) {
-      console.log(error);
       next(error);
     }
   }
@@ -175,25 +172,71 @@ class AdminService {
 
   static async verifyDriverVehicle(req, res, next) {
     try {
-      const vehicleId = req.params.id;
+      const { vehicleId } = req.params;
 
-      if (!vehicleId) {
-        throw new InvalidInput('Vehicle ID is required');
-      }
-
-      const vehicle = await db('Vehicle').where({ id: vehicleId }).first();
+      const vehicle = await db('Vehicle')
+        .join('User', { 'Vehicle.driver_id': 'User.id' })
+        .where('Vehicle.id', vehicleId)
+        .select('User.email')
+        .first();
       if (!vehicle) {
         throw new ResourceNotFound('Vehicle with this ID not found');
       }
 
-      await db('Vehicle')
-        .where({ id: vehicleId })
-        .update({ is_verified: true });
+      await db('Vehicle').where({ id: vehicleId }).update({ is_verified: 1 });
+
+      await sendMail(
+        vehicle.email,
+        'Vehicle Verification Status',
+        'Your vehicle has been successfully verified and is now active in our system.'
+      );
 
       const resPayload = {
         success: true,
         message: 'Vehicle verified succesfully',
       };
+
+      res.status(200).json(resPayload);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async assignVehicleTypeToDriverVehicle(req, res, next) {
+    try {
+      const { vehicleId } = req.query;
+      const { vehicleType } = req.body;
+
+      if (!vehicleId || !vehicleType) {
+        throw new InvalidInput('Vehicle ID and Vehicle Type ID are required');
+      }
+
+      // Fetch the vehicle by its ID
+      const vehicle = await db('Vehicle').where({ id: vehicleId }).first();
+      if (!vehicle) {
+        throw new ResourceNotFound('Vehicle with this ID not found');
+      }
+
+      // Fetch the vehicle type by its name
+      const vehicleTypeName = await db('Vehicle_Type')
+        .where({ type: vehicleType })
+        .first();
+      if (!vehicleTypeName) {
+        throw new ResourceNotFound('Vehicle type with this name not found');
+      }
+
+      // Assign the vehicle type to the vehicle
+      await db('Vehicle')
+        .where({ id: vehicleId })
+        .update({ type_id: vehicleTypeName.id });
+
+      const resPayload = {
+        success: true,
+        message: 'Vehicle type assigned successfully',
+      };
+
+      // Send the success response
+      res.status(200).json(resPayload);
     } catch (error) {
       next(error);
     }

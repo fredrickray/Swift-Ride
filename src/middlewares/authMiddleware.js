@@ -25,7 +25,13 @@ const verifyToken = (token) => {
 
     return decodedUser;
   } catch (error) {
-    throw new InvalidInput('Invalid token');
+    if (error.name === 'TokenExpiredError') {
+      throw new Unauthorized('Token has expired');
+    } else if (error.name === 'JsonWebTokenError') {
+      throw new Unauthorized('Invalid token');
+    } else {
+      throw new Unauthorized('Authentication failed');
+    }
   }
 };
 
