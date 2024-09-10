@@ -4,12 +4,10 @@ import { requireAuth } from '../../../middlewares/authMiddleware.js';
 const passengerRouter = Router();
 const passengerController = new PassengerController();
 
-passengerRouter
-  .route('/initiate')
-  .post(
-    requireAuth,
-    passengerController.initiateRide.bind(passengerController)
-  );
+passengerRouter.route('/initiate').post(
+  // requireAuth,
+  passengerController.initiateRide.bind(passengerController)
+);
 
 passengerRouter
   .route('/driver-available')

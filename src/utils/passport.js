@@ -81,7 +81,7 @@ passport.use(
             console.log('Login successful', user);
             await db('User').where({ email }).update({
               google_id: profile.id,
-              isisVerified: true,
+              isVerified: true,
               role_id: role.id,
             });
 

@@ -101,6 +101,11 @@ class PassengerService {
       const { passengerId } = req.params;
       const { pickupLocation, destination } = req.body;
 
+      // const passenger = await db('Role').where({ id: passengerId.role });
+
+      if (pickupLocation === '' || destination === '') {
+        throw new BadRequest('Pickup location and Destination required');
+      }
       // OpenStreetMap Nominatim API for the geolocation
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${pickupLocation}`;
       const nominatimResponse = await axios.get(nominatimUrl);
@@ -345,6 +350,60 @@ class PassengerService {
       res.status(200).json(resPayload);
     } catch (error) {
       console.log(error);
+      next(error);
+    }
+  }
+
+  static async availableDrivers(req, res, next) {
+    try {
+      const { q, limit = 10, offset = 0 } = req.query;
+
+      // Validate that the 'q' parameter is present and valid
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or missing vehicle type query parameter',
+        });
+      }
+
+      // Fetch available drivers
+      const availableDrivers = await db('Driver')
+        .join('Vehicle', 'Driver.id', '=', 'Vehicle.driver_id')
+        .join('Vehicle_Type', 'Vehicle.type_id', '=', 'Vehicle_Type.id')
+        .join('User', 'User.id', '=', 'Driver.user_id')
+        .join(
+          'Driver_Availability',
+          'Driver.id',
+          '=',
+          'Driver_Availability.driver_id'
+        )
+        .where({ 'Vehicle_Type.type': q, 'Driver_Availability.available': 1 })
+        .select(
+          'Driver.id',
+          'User.name',
+          'Vehicle.make_id',
+          'Vehicle.type_id',
+          'Vehicle.color'
+        )
+        .limit(limit)
+        .offset(offset);
+
+      // If no drivers are available, throw an error
+      if (availableDrivers.length === 0) {
+        throw new ResourceNotFound(`No available drivers for ${q}`);
+      }
+
+      // Response payload
+      const resPayload = {
+        success: true,
+        message: 'Available drivers retrieved successfully',
+        drivers: availableDrivers,
+      };
+
+      // Send the response
+      res.status(200).json(resPayload);
+    } catch (error) {
+      console.log(error); // Replace this with a logging solution for production
       next(error);
     }
   }

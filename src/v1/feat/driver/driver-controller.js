@@ -8,4 +8,8 @@ export class DriverController {
   async vehicleRegistration(req, res, next) {
     await this.driverService.vehicleRegistration(req, res, next);
   }
+
+  async updateDriverAvailabiltyStatus(req, res, next) {
+    await this.driverService.updateDriverAvailabiltyStatus(req, res, next);
+  }
 }
