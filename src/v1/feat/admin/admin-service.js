@@ -147,8 +147,8 @@ class AdminService {
       }
 
       const vehicleMake = await db('Vehicle_Make').where({ name }).first();
-      if (vehicleMake.name === name) {
-        throw new Conflict(`${name} already exist in the database`);
+      if (vehicleMake) {
+        throw new Conflict(`${name} already exists in the database`);
       }
 
       const [makeId] = await db('Vehicle_Make').insert({ name });

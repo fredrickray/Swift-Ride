@@ -18,4 +18,8 @@ driverRouter.route('/vehicle-registration').post(
   driverController.vehicleRegistration.bind(driverController)
 );
 
+driverRouter
+  .route('/location')
+  .post(driverController.updateDriverLocation.bind(driverController));
+
 export default driverRouter;

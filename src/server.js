@@ -12,12 +12,18 @@ class App {
   constructor() {
     this.app = express();
     this.server = createServer(this.app); // Creating HTTP server
-    this.io = new SocketIOServer(this.server); // Attaching socket.io to the server
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: '*', // Update this to be more specific if necessary for production
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
+    }); // Attaching socket.io to the server
 
     this.initializeMiddlewares();
     this.routes();
-    this.initializeSocket();
     this.handleErrors();
+    this.initializeSocket();
   }
 
   initializeMiddlewares() {
@@ -27,7 +33,7 @@ class App {
 
     this.app.use(
       cors({
-        origin: ['http://localhost:3000'],
+        origin: '*',
         methods: ['GET', 'POST', 'UPDATE', 'DELETE', 'OPTIONS', 'PUT'],
         credentials: true,
         allowedHeaders: ['X-Requested-With', 'Content-Type'],
@@ -65,6 +71,7 @@ class App {
   }
 
   initializeSocket() {
+    // console.log('Reached sockets', this.io);
     this.io.on('connection', (socket) => {
       console.log(`New client connected: ${socket.id}`);
 
@@ -80,7 +87,7 @@ class App {
       });
     });
 
-    this.app.io = this.io;
+    // this.app.io = this.io;
   }
 
   handleErrors() {
@@ -89,7 +96,7 @@ class App {
   }
 
   start(port) {
-    this.app.listen(port, () => {
+    this.server.listen(port, () => {
       console.log(`Server initialized and ready for action! 🤖`);
       console.log('     /\\_/\\');
       console.log('    / o o \\');
