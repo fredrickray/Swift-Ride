@@ -9,7 +9,7 @@ export class DriverController {
     await this.driverService.vehicleRegistration(req, res, next);
   }
 
-  async updateDriverLocation(req, res, next) {
-    await this.driverService.updateDriverLocation(req, res, next);
+  async updateDriverAvailabiltyStatus(req, res, next) {
+    await this.driverService.updateDriverAvailabiltyStatus(req, res, next);
   }
 }

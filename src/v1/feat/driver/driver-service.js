@@ -93,7 +93,7 @@ class DriverService {
     }
   }
 
-  static async updateDriverLocation(req, res, next) {
+  static async updateDriverAvailabiltyStatus(req, res, next) {
     try {
       const { userId, latitude, longitude } = req.body;
 
