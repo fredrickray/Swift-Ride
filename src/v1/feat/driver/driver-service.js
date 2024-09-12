@@ -3,6 +3,7 @@ import { uploadToCloudinary } from '../../../utils/fileHelper.js';
 import {
   BadRequest,
   ResourceNotFound,
+  Unauthorized,
 } from '../../../middlewares/errorMiddleware.js';
 
 class DriverService {
@@ -95,41 +96,68 @@ class DriverService {
 
   static async updateDriverAvailabiltyStatus(req, res, next) {
     try {
-      const { userId, latitude, longitude } = req.body;
+      const { userId } = req.params;
+      const { latitude, longitude } = req.body;
 
       // Check if the driver exists and if the user is a driver
       const user = await db('User')
-        .join('roles', 'User.role_id', 'roles.id')
+        .join('Role', 'User.role_id', 'Role.id')
         .where('User.id', userId)
-        .select('User.id', 'User.name', 'roles.name as role_name')
+        .select('User.id', 'User.name', 'Role.name as role_name')
         .first();
 
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        throw new ResourceNotFound('User not found');
       }
 
       if (user.role_name !== 'driver') {
-        return res
-          .status(403)
-          .json({ error: 'User is not authorized as a driver' });
+        throw new Unauthorized('User is not authorized as a driver');
       }
 
-      // Update the driver's location in the Driver_Availability table
-      await db('Driver_Availability').where({ driver_id }).update({
-        location_lat: latitude,
-        location_lon: longitude,
-        updated_at: db.fn.now(),
-      });
+      // Check if the driver exists in the Driver table
+      const driver = await db('Driver').where({ user_id: userId }).first();
 
+      if (!driver) {
+        throw new ResourceNotFound('Driver record not found');
+      }
+
+      const driverAvailability = await db('Driver_Availability')
+        .where({ driver_id: driver.id })
+        .select('available')
+        .first();
+
+      let newAvailabilityStatus = true;
+
+      if (driverAvailability) {
+        newAvailabilityStatus = !driverAvailability.available;
+
+        // Update the existing driver's location and availability status
+        await db('Driver_Availability').where({ driver_id: driver.id }).update({
+          location_lat: latitude,
+          location_lon: longitude,
+          available: newAvailabilityStatus,
+          updated_at: db.fn.now(),
+        });
+      } else {
+        // If no availability record exists, inserting a new one
+        await db('Driver_Availability').insert({
+          driver_id: driver.id,
+          location_lat: latitude,
+          location_lon: longitude,
+          available: newAvailabilityStatus,
+          created_at: db.fn.now(),
+          updated_at: db.fn.now(),
+        });
+      }
       const resPayload = {
         success: true,
-        message: 'Driver location updated successfully',
+        message: 'Driver availability status and location updated successfully',
+        available: newAvailabilityStatus,
       };
 
       res.status(200).json(resPayload);
     } catch (error) {
-      console.error(error);
-      next(error); // Pass error to error handling middleware
+      next(error);
     }
   }
 

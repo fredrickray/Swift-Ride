@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { DriverController } from './driver-controller.js';
 import { requireAuth } from '../../../middlewares/authMiddleware.js';
 import multer from 'multer';
+import { updateDriverAvailabiltyStatusValidator } from '../../../validations/driver-validation.js';
+
 const driverRouter = Router();
 const driverController = new DriverController();
 const upload = multer({ dest: 'file-uploads/' });
@@ -19,7 +21,10 @@ driverRouter.route('/vehicle-registration').post(
 );
 
 driverRouter
-  .route('/location')
-  .post(driverController.updateDriverAvailabiltyStatus.bind(driverController));
+  .route('/:userId/available')
+  .post(
+    updateDriverAvailabiltyStatusValidator,
+    driverController.updateDriverAvailabiltyStatus.bind(driverController)
+  );
 
 export default driverRouter;

@@ -1,8 +1,7 @@
 import Joi from 'joi';
-import { InvalidInput } from '../middlewares/errorMiddleware';
+import { InvalidInput } from '../middlewares/errorMiddleware.js';
 
 const updateDriverAvailabiltyStatusSchema = Joi.object({
-  driverId: Joi.string().required(),
   latitude: Joi.string().required(),
   longitude: Joi.string().required(),
 });
