@@ -77,39 +77,4 @@ const authorizeRole = (allowedRoles) => {
   };
 };
 
-const checkAdmin = async (req, res, next) => {
-  try {
-    const { authorization } = req.headers;
-    if (!authorization) {
-      throw new Unauthorized('Authorization token required');
-    }
-
-    const token = authorization.split(' ')[1];
-    const { id } = await verifyToken(token);
-    const user = await db('User').where({ id }).first();
-
-    if (!user) {
-      throw new Unauthorized('User not found');
-    }
-
-    const role = await db('Role').where({ id: user.role_id }).first();
-    if (role.name !== 'admin') {
-      throw new Unauthorized('Access denied, admin only');
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    console.log('Check admin error:', error);
-    next(error);
-  }
-};
-
-export {
-  createJWT,
-  authorizeRole,
-  verifyJWT,
-  requireAuth,
-  otpExpiryTime,
-  checkAdmin,
-};
+export { createJWT, authorizeRole, verifyJWT, requireAuth, otpExpiryTime };
