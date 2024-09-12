@@ -5,28 +5,28 @@ import {
   InvalidInput,
   ResourceNotFound,
 } from './errorMiddleware.js';
+import dotenvConfig from '../config/dotenvConfig.js';
 
 const maxAge = 10 * 60 * 100;
-const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
-const createToken = (id, appRole) => {
+const otpExpiryTime = new Date(Date.now() + 10 * 60 * 1000);
+const createJWT = (id, appRole) => {
   const payload = {
     id,
     appRole,
     iat: Date.now(),
   };
-  return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: maxAge,
+  return jwt.sign(payload, dotenvConfig.JWT.accessToken, {
+    expiresIn: dotenvConfig.TokenExpiry.accessToken,
   });
 };
 
-const verifyToken = (token) => {
+const verifyJWT = (token) => {
   try {
-    const secretKey = process.env.JWT_SECRET;
-    if (!token || !secretKey) {
+    if (!token) {
       throw new InvalidInput('Token or secretKey is missing');
     }
 
-    const decodedUser = jwt.verify(token, secretKey);
+    const decodedUser = jwt.verify(token, dotenvConfig.JWT.accessToken);
 
     return decodedUser;
   } catch (error) {
@@ -49,18 +49,32 @@ const requireAuth = async (req, res, next) => {
     }
 
     const token = authorization.split(' ')[1];
-    const { id } = verifyToken(token);
-    const user = await db('User').where({ id });
+    const { id, appRole } = verifyJWT(token);
+    const user = await db('User').where({ id }).first();
 
     if (!user) {
       throw new ResourceNotFound('User not found');
     }
-    req.user = user;
+    req.user = { ...user, appRole };
     next();
   } catch (error) {
-    console.log(error);
+    console.log('requireAuth:', error);
     next(error);
   }
+};
+
+const authorizeRole = (allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      if (!allowedRoles.includes(req.user.appRole)) {
+        throw new Unauthorized('You do not have access to this resource');
+      }
+      next();
+    } catch (error) {
+      console.log('authorizeRole:', error);
+      next(error);
+    }
+  };
 };
 
 const checkAdmin = async (req, res, next) => {
@@ -91,4 +105,11 @@ const checkAdmin = async (req, res, next) => {
   }
 };
 
-export { createToken, verifyToken, requireAuth, expiryTime, checkAdmin };
+export {
+  createJWT,
+  authorizeRole,
+  verifyJWT,
+  requireAuth,
+  otpExpiryTime,
+  checkAdmin,
+};
