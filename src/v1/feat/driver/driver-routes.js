@@ -16,7 +16,6 @@ driverRouter.route('/vehicle-registration').post(
     { name: 'vehicle_credentials', maxCount: 1 },
     { name: 'license_plate', maxCount: 1 },
   ]),
-  requireAuth,
   driverController.vehicleRegistration.bind(driverController)
 );
 

@@ -9,9 +9,9 @@ import db from '../../../config/db.js';
 import generateOtp from '../../../utils/otp.js';
 import sendMail from '../../../utils/mail.js';
 import {
-  createToken,
-  verifyToken,
-  expiryTime,
+  createJWT,
+  verifyJWT,
+  otpExpiryTime,
 } from '../../../middlewares/authMiddleware.js';
 import passport from '../../../utils/passport.js';
 
@@ -40,7 +40,7 @@ class AuthService {
         phone_number,
         role_id: roleRecord.id,
         otp: verificationCode,
-        otpExpiry: expiryTime,
+        otpExpiry: otpExpiryTime,
         created_at: db.fn.now(),
         updated_at: db.fn.now(),
       });
@@ -77,25 +77,37 @@ class AuthService {
     try {
       const { email, password } = req.body;
 
-      const user = await db('User').where({ email }).first();
+      const user = await db('User')
+        .join('Role', 'User.role_id', 'Role.id')
+        .where({ email })
+        .select(
+          'User.id',
+          'User.password',
+          'Role.name as role_name',
+          'User.isVerified',
+          'User.email',
+          'User.phone_number',
+          'User.name'
+        )
+        .first();
+
       if (!user) {
         throw new ResourceNotFound('Invalid credentials');
       }
 
-      // console.log('passwordInDB:', user.password);
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      // console.log('inputPassword:', password);
+
       if (!isPasswordValid) {
         throw new ResourceNotFound('Invalid credentials');
       }
 
+      // Check if the user is verified
       if (user.isVerified === 0 || user.isVerified === false) {
         const verificationCode = generateOtp();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
         await db('User')
           .where({ email })
-          .update({ otpExpiry, otp: verificationCode });
+          .update({ otpExpiryTime, otp: verificationCode });
 
         await sendMail(
           email,
@@ -108,11 +120,11 @@ class AuthService {
         );
       }
 
-      const token = createToken(user.id);
+      const token = createJWT(user.id, user.role_name);
 
       const resPayload = {
         success: true,
-        mnessage: 'Login successfully',
+        message: 'Login successful',
         user: {
           id: user.id,
           name: user.name,
@@ -123,7 +135,6 @@ class AuthService {
 
       res.status(200).set('Authorization', `Bearer ${token}`).json(resPayload);
     } catch (error) {
-      console.log(error);
       next(error);
     }
   }
@@ -169,7 +180,7 @@ class AuthService {
 
         await db('User').where({ email }).update({
           otp: verificationCode,
-          otpExpiry: expiryTime,
+          otpExpiry: otpExpiryTime,
           updated_at: db.fn.now(),
         });
 
@@ -208,13 +219,17 @@ class AuthService {
         throw new InvalidInput('Email is required');
       }
 
-      const user = await db('User').where({ email }).first();
+      const user = await db('User')
+        .join('Role', 'User.role_id', 'Role.id')
+        .where({ email })
+        .select('User.id', 'User.email')
+        .first();
 
       if (!user) {
         throw new ResourceNotFound('Account not found');
       }
 
-      const token = createToken(user.id);
+      const token = createJWT(user.id);
 
       const frontend_url = process.env.FRONTEND_BASE_URL;
 
@@ -232,7 +247,7 @@ class AuthService {
 
       await db('User').where({ email }).update({
         passwordResetToken: token,
-        passwordResetExpiry: expiryTime,
+        passwordResetExpiry: otpExpiryTime,
       });
 
       const resPayload = {
@@ -240,8 +255,7 @@ class AuthService {
         message: `A verification link was sent to ${email}`,
       };
 
-      res.header('authorization', `Bearer ${token}`);
-      res.status(200).json(resPayload);
+      res.status(200).set('Authorization', `Bearer ${token}`).json(resPayload);
     } catch (error) {
       next(error);
     }
@@ -258,14 +272,14 @@ class AuthService {
 
       const errors = validatePassword(password);
 
-      const { id } = verifyToken(token);
+      const { id } = verifyJWT(token);
 
       const user = await db('User').where({ id });
       if (!user) {
         throw new ResourceNotFound('User not found');
       }
 
-      if (expiryTime > user.passwordResetExpiry) {
+      if (otpExpiryTime > user.passwordResetExpiry) {
         throw new Unauthorized('OTP has expired or is invalid');
       }
 

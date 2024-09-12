@@ -8,7 +8,6 @@ import {
   createVehicleTypeValidator,
   createVehicleModelValidator,
 } from '../../../validations/admin-validation.js';
-import { checkAdmin } from '../../../middlewares/authMiddleware.js';
 const adminRouter = Router();
 const adminController = new AdminController();
 
@@ -18,20 +17,15 @@ adminRouter
 
 adminRouter
   .route('/users')
-  .get(
-    checkAdmin,
-    getUserValidator,
-    adminController.getUsers.bind(adminController)
-  );
+  .get(getUserValidator, adminController.getUsers.bind(adminController));
 
 adminRouter
   .route('/users/:id')
-  .get(checkAdmin, adminController.getUser.bind(adminController));
+  .get(adminController.getUser.bind(adminController));
 
 adminRouter
   .route('/vehicle/type')
   .post(
-    checkAdmin,
     createVehicleTypeValidator,
     adminController.createVehicleType.bind(adminController)
   );
@@ -39,19 +33,17 @@ adminRouter
 adminRouter
   .route('/vehicle/make')
   .post(
-    checkAdmin,
     createVehicleMakeValidator,
     adminController.createVehicleMake.bind(adminController)
   );
 
 adminRouter
   .route('/vehicle/:vehicleId/verify')
-  .put(checkAdmin, adminController.verifyDriverVehicle.bind(adminController));
+  .put(adminController.verifyDriverVehicle.bind(adminController));
 
 adminRouter
   .route('/vehicle/assign-type')
   .patch(
-    checkAdmin,
     adminController.assignVehicleTypeToDriverVehicle.bind(adminController)
   );
 export default adminRouter;

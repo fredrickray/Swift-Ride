@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import db from '../../../config/db.js';
-import { createToken } from '../../../middlewares/authMiddleware.js';
+import { createJWT } from '../../../middlewares/authMiddleware.js';
 import {
   ResourceNotFound,
   InvalidInput,
@@ -31,7 +31,7 @@ class AdminService {
         throw new Unauthorized('Invalid credentials');
       }
 
-      const token = createToken(admin.id);
+      const token = createJWT(admin.id);
       const resPayload = {
         success: true,
         message: 'Login succesfully',
