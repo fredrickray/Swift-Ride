@@ -8,8 +8,13 @@ import {
 
 const maxAge = 10 * 60 * 100;
 const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const createToken = (id, appRole) => {
+  const payload = {
+    id,
+    appRole,
+    iat: Date.now(),
+  };
+  return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: maxAge,
   });
 };
